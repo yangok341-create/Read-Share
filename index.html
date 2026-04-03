@@ -3,37 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀共享紀錄系統 - 完美修復版</title>
+    <title>閱讀共享紀錄系統 - 完美對位版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
         .glass-card { background: white; border-radius: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .page-node { display: none; }
         .page-node.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .check-tag { cursor: pointer; transition: all 0.2s; border: 2px solid #f1f5f9; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: bold; color: #94a3b8; display: inline-block; background: #f8fafc; }
+        input[type="checkbox"]:checked + .check-tag { background-color: #2d5a27; color: white; border-color: #2d5a27; }
         .cat-tag { cursor: pointer; padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; background: white; color: #64748b; border: 1px solid #e2e8f0; transition: all 0.2s; }
-        .cat-tag.active { background: #2d5a27; color: white; border-color: #2d5a27; box-shadow: 0 4px 12px rgba(45,90,39,0.2); }
+        .cat-tag.active { background: #2d5a27; color: white; border-color: #2d5a27; }
         #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
+        .modal-content { background: white; width: 100%; max-w: 3xl; border-radius: 2.5rem; padding: 2rem; position: relative; margin: 2rem auto; }
         textarea, input[type="text"] { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 12px; width: 100%; outline: none; background-color: #fcfcfc; }
-        .mini-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: bold; margin-right: 4px; margin-bottom: 4px; }
-        .full-text-display { white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+        .mini-tag { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; margin: 2px; }
+        .tag-kw { background: #f0fdf4; color: #166534; border-color: #bbf7d0; } 
+        .tag-discuss { background: #fff7ed; color: #9a3412; border-color: #ffedd5; } 
+        .tag-scaffold { background: #f0f9ff; color: #075985; border-color: #e0f2fe; }
+        .full-text-display { white-space: pre-wrap; word-break: break-all; line-height: 1.8; color: #1e293b; font-size: 1.05rem; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-2xl border border-slate-200">
-        <button onclick="switchPage('form')" class="px-6 py-2 rounded-full font-bold text-slate-600">✍️ 填寫</button>
-        <button onclick="switchPage('query')" class="px-6 py-2 rounded-full font-bold text-slate-600">🔍 查詢</button>
-        <button onclick="switchPage('cloud')" class="px-6 py-2 rounded-full font-bold text-slate-600">🌈 文字雲</button>
+        <button onclick="switchPage('form')" class="px-6 py-2 rounded-full font-bold text-slate-600 transition">✍️ 填寫</button>
+        <button onclick="switchPage('query')" class="px-6 py-2 rounded-full font-bold text-slate-600 transition">🔍 查詢</button>
+        <button onclick="switchPage('cloud')" class="px-6 py-2 rounded-full font-bold text-slate-600 transition">🌈 文字雲</button>
     </nav>
 
     <main class="max-w-6xl mx-auto pb-24">
         <div class="space-y-4 mb-8 glass-card p-6 border-l-8 border-[#2d5a27]">
-            <h3 class="text-sm font-black text-slate-400 mb-2 uppercase">目前類別</h3>
-            <div id="cat-group-1" class="flex flex-wrap gap-2"></div>
-            <div id="cat-group-2" class="flex flex-wrap gap-2 border-t pt-4"></div>
+            <h3 class="text-xs font-black text-slate-400 mb-2 uppercase text-center tracking-widest">目前瀏覽類別</h3>
+            <div id="cat-group-1" class="flex flex-wrap gap-2 justify-center"></div>
+            <div id="cat-group-2" class="flex flex-wrap gap-2 justify-center border-t pt-4"></div>
         </div>
         
         <section id="page-form" class="page-node active space-y-8">
@@ -42,33 +48,42 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
                     <div class="space-y-6">
                         <div><label class="block font-bold mb-1">繪本名稱*</label><input type="text" id="title" style="background-color: #fffbeb;"></div>
-                        <div><label class="block font-bold mb-1 text-green-800">📌 文字雲關鍵字*</label><input type="text" id="kw" style="background-color: #f0fdf4;" placeholder="空格隔開"></div>
+                        <div><label class="block font-bold mb-1 text-green-800">📌 筆記核心關鍵字*</label><input type="text" id="kw" style="background-color: #f0fdf4;" placeholder="空格隔開"></div>
                         <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200">
-                            <label class="block font-bold mb-2">📸 上傳照片</label>
-                            <input type="file" id="photo" accept="image/*" class="w-full">
+                            <label class="block font-bold mb-2">📸 上傳照片 (存至 J 欄)</label>
+                            <input type="file" id="photo" accept="image/*" class="w-full text-xs">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-2">使用方式</label>
+                            <div class="flex flex-wrap gap-2">
+                                <label><input type="checkbox" name="useType" value="團體討論" class="hidden"><span class="check-tag">團體討論</span></label>
+                                <label><input type="checkbox" name="useType" value="學習區鷹架" class="hidden"><span class="check-tag">學習區鷹架</span></label>
+                                <label><input type="checkbox" name="useType" value="自由閱讀" class="hidden"><span class="check-tag">自由閱讀</span></label>
+                                <label><input type="checkbox" name="useType" value="延伸活動" class="hidden"><span class="check-tag">延伸活動</span></label>
+                            </div>
                         </div>
                     </div>
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-amber-50 p-3 rounded-2xl"><label class="block text-xs font-bold text-amber-700">📙 討論關鍵字</label><input type="text" id="discuss"></div>
-                            <div class="bg-sky-50 p-3 rounded-2xl"><label class="block text-xs font-bold text-sky-700">🏗️ 鷹架關鍵字</label><input type="text" id="scaffold"></div>
+                            <div><label class="block font-bold text-amber-700">📙 討論關鍵字</label><input type="text" id="discuss"></div>
+                            <div><label class="block font-bold text-sky-700">🏗️ 鷹架關鍵字</label><input type="text" id="scaffold"></div>
                         </div>
                         <div><label class="block font-bold text-slate-500">🧒 孩子的話</label><textarea id="child" rows="2"></textarea></div>
                         <div><label class="block font-bold text-slate-500">✍️ 我的心得</label><textarea id="feel" rows="2"></textarea></div>
                         <div><label class="block font-bold text-slate-500">📝 詳細內容說明</label><textarea id="others" rows="3"></textarea></div>
                     </div>
                 </div>
-                <button id="save-btn" onclick="uploadData()" class="w-full bg-[#2d5a27] text-white font-bold py-4 rounded-2xl shadow-xl mt-8 text-lg">確認儲存</button>
+                <button id="save-btn" onclick="uploadData()" class="w-full bg-[#2d5a27] text-white font-bold py-4 rounded-2xl shadow-xl mt-8 text-lg">確認儲存並同步</button>
             </div>
             <div class="glass-card p-6 md:p-10">
-                <h3 class="text-xl font-bold text-slate-700 italic">📂 最新 5 筆紀錄</h3>
+                <h3 class="text-xl font-bold text-slate-700 italic">📂 最近紀錄</h3>
                 <div id="record-list" class="space-y-4 mt-4"></div>
             </div>
         </section>
 
         <section id="page-query" class="page-node space-y-8">
             <div class="glass-card p-6 md:p-10">
-                <h2 class="text-3xl font-bold text-slate-800 mb-6">🔍 依書名查詢 (<span class="current-cat-label"></span>)</h2>
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 text-center">🔍 依書名查詢</h2>
                 <div id="book-query-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </section>
@@ -76,9 +91,9 @@
         <section id="page-cloud" class="page-node space-y-8">
             <div class="glass-card p-6 md:p-10 text-center">
                 <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-bold text-slate-800">🌈 <span class="current-cat-label"></span> 文字雲</h2>
-                    <select id="queryMode" onchange="refreshUI()" class="bg-white border p-2 rounded-xl">
-                        <option value="kw">核心關鍵字</option>
+                    <h2 class="text-3xl font-bold text-slate-800">🌈 文字雲成果</h2>
+                    <select id="queryMode" onchange="refreshUI()" class="bg-white border p-2 rounded-xl text-sm outline-none">
+                        <option value="kw">筆記核心關鍵字</option>
                         <option value="discuss">討論關鍵字</option>
                         <option value="scaffold">鷹架關鍵字</option>
                     </select>
@@ -89,24 +104,41 @@
     </main>
 
     <div id="modal" onclick="closeModal()">
-        <div class="bg-white w-full max-w-2xl p-8 rounded-[2.5rem] relative" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-6 right-8 text-slate-300 hover:text-slate-600 text-4xl">&times;</button>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-6 right-8 text-4xl hover:text-red-500 transition">&times;</button>
             <div id="m-body"></div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzkbWySR4X0vf25J7ZWNvgEdpLtUzpMQHlnRHRy2zvHOt4opftZmsTqADPOxkQkFLysVw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbw41lqmjBvWAXmah94ePPwdEJ8nCtlt9Rg5jhRjlB9S5vRKkV9k7mFogBkrvH6q0Yhnlw/exec";
         const g1 = ["公園", "大樹花草", "鳥類", "好朋友", "建築與設施", "爺爺奶奶"], g2 = ["生活自理", "性別平等", "其他"];
         let currentCat = "公園", db = [];
 
-        function clean(str) {
+        function clean(str) { 
             const s = String(str || "").trim();
-            return s.startsWith("data:image") ? "" : s;
+            // 防止舊資料中的亂碼影響顯示
+            return (s.startsWith("data:image") || s.length > 1000) ? "" : s;
+        }
+
+        function getTagsHTML(val, className) {
+            if(!val || String(val).startsWith("data:image")) return "";
+            return String(val).split(/[\s,，、]+/).filter(t => t.trim().length > 0).map(t => `<span class="mini-tag ${className}">#${t}</span>`).join('');
+        }
+
+        // 圖片網址處理邏輯
+        function getImageUrl(photo) {
+            if (!photo || photo === "上傳失敗") return "";
+            if (photo.includes('id=')) {
+                const id = photo.split('id=')[1];
+                return `https://drive.google.com/thumbnail?id=${id}&sz=s1000`;
+            }
+            return photo;
         }
 
         function init() {
             const b1 = document.getElementById('cat-group-1'), b2 = document.getElementById('cat-group-2');
+            b1.innerHTML = ""; b2.innerHTML = "";
             [...g1, ...g2].forEach(cat => {
                 const b = document.createElement('div');
                 b.className = `cat-tag ${cat === currentCat ? 'active' : ''}`;
@@ -115,7 +147,6 @@
                     currentCat = cat;
                     document.querySelectorAll('.cat-tag').forEach(tag => tag.classList.remove('active'));
                     e.target.classList.add('active');
-                    document.querySelectorAll('.current-cat-label').forEach(el => el.innerText = cat);
                     renderList(); renderQueryList(); refreshUI();
                 };
                 (g1.includes(cat) ? b1 : b2).appendChild(b);
@@ -124,7 +155,7 @@
         }
 
         async function fetchData() {
-            try { const res = await fetch(API_URL); db = await res.json(); renderList(); renderQueryList(); refreshUI(); } catch(e) {}
+            try { const res = await fetch(API_URL); db = await res.json(); renderList(); renderQueryList(); refreshUI(); } catch(e) { console.error("資料讀取錯誤:", e); }
         }
 
         function switchPage(page) {
@@ -134,22 +165,43 @@
             window.scrollTo(0,0);
         }
 
+        // 核心渲染模板：確保文字點開後顯示所有九個項目與照片
         function recordTemplate(r) {
-            const photo = r.find(cell => String(cell).startsWith("data:image") || String(cell).startsWith("https://drive.google.com"));
-            const makeTags = (str, color) => String(str || "").split(/[\s,，、]+/).filter(t => t).map(t => `<span class="mini-tag ${color}">#${t}</span>`).join('');
-            
+            // A類別(0), B書名(1), C核心(2), D孩子(3), E心得(4), F使用方式(5), G討論(6), H鷹架(7), I詳細(8), J照片(9)
+            const photo = r[9] || "";
+            const displayImg = getImageUrl(photo);
+
             return `
-                <div class="py-6 border-b last:border-none space-y-4">
-                    <div>
-                        <h4 class="font-bold text-2xl text-[#2d5a27] mb-2">📖 ${clean(r[1])}</h4>
-                        <div class="flex flex-wrap">${makeTags(r[2], 'bg-green-100 text-green-700')} ${makeTags(r[6], 'bg-amber-100 text-amber-700')} ${makeTags(r[7], 'bg-sky-100 text-sky-700')}</div>
+                <div class="record-entry py-6 border-b last:border-none">
+                    <div class="mb-4">
+                        <div class="text-xs font-bold text-slate-400 mb-1 uppercase">類別：${clean(r[0])}</div>
+                        <h4 class="font-bold text-3xl text-[#2d5a27] mb-3">📖 ${clean(r[1])}</h4>
+                        <div class="flex flex-wrap gap-1">
+                            ${getTagsHTML(r[2], 'tag-kw')} 
+                            ${getTagsHTML(r[6], 'tag-discuss')} 
+                            ${getTagsHTML(r[7], 'tag-scaffold')}
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="bg-amber-50 p-4 rounded-2xl"><b>🧒 孩子的話：</b><div class="full-text-display">${clean(r[3]) || '無'}</div></div>
-                        <div class="bg-sky-50 p-4 rounded-2xl"><b>✍️ 我的心得：</b><div class="full-text-display">${clean(r[4]) || '無'}</div></div>
+                    <div class="space-y-5 mt-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-amber-50 p-5 rounded-2xl border border-amber-100">
+                                <b class="text-amber-800 block mb-2 font-bold">🧒 孩子的話：</b>
+                                <div class="full-text-display">${clean(r[3]) || '（無內容）'}</div>
+                            </div>
+                            <div class="bg-sky-50 p-5 rounded-2xl border border-sky-100">
+                                <b class="text-sky-800 block mb-2 font-bold">✍️ 我的心得：</b>
+                                <div class="full-text-display">${clean(r[4]) || '（無內容）'}</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl text-xs text-slate-500 border border-slate-200">
+                            <b>🛠️ 使用方式：</b> ${clean(r[5]) || '未標註'}
+                        </div>
+                        <div class="bg-green-50 p-6 rounded-2xl border border-green-100">
+                            <b class="text-green-800 block mb-2 font-bold">📝 詳細內容說明：</b>
+                            <div class="full-text-display">${clean(r[8]) || '（無詳細說明）'}</div>
+                        </div>
+                        ${displayImg ? `<div class="text-center mt-6"><img src="${displayImg}" class="inline-block max-w-full rounded-3xl shadow-xl border-4 border-white" loading="lazy"></div>` : ''}
                     </div>
-                    <div class="bg-green-50 p-5 rounded-2xl border border-green-100"><b>📝 詳細說明：</b><div class="full-text-display">${clean(r[8]) || '無'}</div></div>
-                    ${photo ? `<div class="text-center pt-2"><img src="${photo}" class="inline-block max-w-full rounded-2xl shadow-lg border-2 border-white"></div>` : ''}
                 </div>`;
         }
 
@@ -159,9 +211,9 @@
             list.innerHTML = filtered.length ? "" : "尚無紀錄";
             [...filtered].reverse().slice(0, 5).forEach(r => {
                 const item = document.createElement('div');
-                item.className = "bg-white p-5 rounded-2xl border flex justify-between items-center cursor-pointer shadow-sm";
-                item.innerHTML = `<h4 class="font-bold text-[#2d5a27]">📖 ${clean(r[1])}</h4><span>❯</span>`;
-                item.onclick = () => { document.getElementById('m-body').innerHTML = recordTemplate(r); document.getElementById('modal').style.display = 'flex'; };
+                item.className = "bg-white p-5 rounded-2xl border flex justify-between items-center cursor-pointer shadow-sm hover:bg-green-50 transition";
+                item.innerHTML = `<h4 class="font-bold text-[#2d5a27]">📖 ${clean(r[1])}</h4><span class="text-slate-300">❯</span>`;
+                item.onclick = () => { document.getElementById('m-body').innerHTML = recordTemplate(r); document.getElementById('modal').style.display = 'block'; };
                 list.appendChild(item);
             });
         }
@@ -170,17 +222,17 @@
             const container = document.getElementById('book-query-list');
             const filtered = db.filter(r => String(r[0]).trim() === currentCat);
             const bookNames = [...new Set(filtered.map(r => clean(r[1])))].filter(n => n);
-            container.innerHTML = bookNames.length ? "" : "目前無紀錄";
+            container.innerHTML = bookNames.length ? "" : "<div class='col-span-full text-center py-10 text-slate-400'>目前無資料</div>";
             bookNames.forEach(name => {
                 const btn = document.createElement('div');
-                btn.className = "bg-white p-4 rounded-2xl border-2 hover:border-[#2d5a27] cursor-pointer font-bold text-[#2d5a27] text-center shadow-sm";
+                btn.className = "bg-white p-4 rounded-2xl border-2 border-slate-100 hover:border-[#2d5a27] cursor-pointer font-bold text-[#2d5a27] text-center shadow-sm transition";
                 btn.innerText = "📖 " + name;
                 btn.onclick = () => {
                     const matched = db.filter(r => clean(r[1]) === name && String(r[0]).trim() === currentCat);
                     const body = document.getElementById('m-body');
-                    body.innerHTML = `<h2 class="text-3xl font-black border-b-4 border-[#2d5a27] pb-2 mb-6">📚 ${name}</h2>`;
+                    body.innerHTML = `<h2 class="text-3xl font-black text-[#2d5a27] border-b-4 border-[#2d5a27] pb-2 mb-8 text-center">📚 ${name}</h2>`;
                     matched.reverse().forEach(r => body.innerHTML += recordTemplate(r));
-                    document.getElementById('modal').style.display = 'flex';
+                    document.getElementById('modal').style.display = 'block';
                 };
                 container.appendChild(btn);
             });
@@ -203,9 +255,9 @@
                 click: (item) => {
                     const matched = db.filter(r => String(r[0]).trim() === currentCat && String(r[col]).includes(item[0]));
                     const body = document.getElementById('m-body');
-                    body.innerHTML = `<h2 class="text-3xl font-black border-b-4 border-[#2d5a27] pb-2 mb-6 text-[#2d5a27]">🔍 ${item[0]}</h2>`;
+                    body.innerHTML = `<h2 class="text-3xl font-black border-b-4 border-[#2d5a27] pb-2 mb-8 text-center text-[#2d5a27]">🔍 ${item[0]}</h2>`;
                     matched.reverse().forEach(r => body.innerHTML += recordTemplate(r));
-                    document.getElementById('modal').style.display = 'flex';
+                    document.getElementById('modal').style.display = 'block';
                 },
                 fontFamily: 'Noto Sans TC', color: '#2d5a27', rotateRatio: 0, backgroundColor: '#ffffff'
             });
@@ -220,9 +272,12 @@
                 discuss: document.getElementById('discuss').value, scaffold: document.getElementById('scaffold').value,
                 others: document.getElementById('others').value, img: file ? await toBase64(file) : ""
             };
-            if(!data.title || !data.kw) return alert("請填寫必填欄位");
-            btn.disabled = true; btn.innerText = "儲存中...";
-            try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); alert("✅ 儲存成功！"); location.reload(); } catch(e) { btn.disabled = false; }
+            if(!data.title || !data.kw) return alert("請填寫書名與核心關鍵字");
+            btn.disabled = true; btn.innerText = "正在同步至雲端...";
+            try { 
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); 
+                alert("✅ 儲存成功！"); location.reload(); 
+            } catch(e) { btn.disabled = false; btn.innerText = "確認儲存並同步"; }
         }
 
         const toBase64 = f => new Promise(res => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => res(rd.result); });
@@ -231,4 +286,3 @@
     </script>
 </body>
 </html>
-}
