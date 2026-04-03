@@ -3,52 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀共享紀錄系統 - 類別直選優化版</title>
+    <title>閱讀共享紀錄系統</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d5a27">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3145/3145765.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
         .glass-card { background: white; border-radius: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .page-node { display: none; }
         .page-node.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* 標籤樣式 */
         .check-tag { cursor: pointer; transition: all 0.2s; border: 2px solid #f1f5f9; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: bold; color: #94a3b8; display: inline-block; background: #f8fafc; }
         input[type="checkbox"]:checked + .check-tag { background-color: #2d5a27; color: white; border-color: #2d5a27; }
         
         .cat-tag { cursor: pointer; padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; background: white; color: #64748b; border: 1px solid #e2e8f0; transition: all 0.2s; }
         .cat-tag.active { background: #2d5a27; color: white; border-color: #2d5a27; box-shadow: 0 4px 12px rgba(45,90,39,0.2); }
         
-        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        textarea, input[type="text"] { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 12px; width: 100%; outline: none; background-color: #fcfcfc; }
+        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(5px); }
+        textarea, input[type="text"] { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 12px; width: 100%; outline: none; transition: all 0.2s; background-color: #fcfcfc; }
+        textarea:focus, input:focus { border-color: #2d5a27; background-color: #ffffff; }
+        
         .full-text-display { white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
-
-        /* 頂部類別選擇器小標籤 */
-        .sticky-nav { position: sticky; top: 0; z-index: 40; background: rgba(241, 245, 249, 0.9); backdrop-filter: blur(10px); padding: 10px 0; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <nav class="fixed top-4 right-4 z-50 flex gap-2">
-        <button onclick="switchPage('form')" class="bg-white border shadow-lg px-4 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-50 transition">✍️ 填寫</button>
-        <button onclick="switchPage('query')" class="bg-white border shadow-lg px-4 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-50 transition">🔍 查詢</button>
-        <button onclick="switchPage('cloud')" class="bg-white border shadow-lg px-4 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-50 transition">🌈 文字雲</button>
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-2xl border border-slate-200">
+        <button onclick="switchPage('form')" class="px-6 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-100 transition">✍️ 填寫</button>
+        <button onclick="switchPage('query')" class="px-6 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-100 transition">🔍 查詢</button>
+        <button onclick="switchPage('cloud')" class="px-6 py-2 rounded-full font-bold text-slate-600 hover:bg-slate-100 transition">🌈 文字雲</button>
     </nav>
 
-    <main class="max-w-6xl mx-auto pt-12 md:pt-0">
+    <main class="max-w-6xl mx-auto pb-24">
 
         <div class="space-y-4 mb-8 glass-card p-6 border-l-8 border-[#2d5a27]">
-            <h3 class="text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">目前瀏覽類別</h3>
-            <div id="cat-container-all" class="space-y-4">
+            <h3 class="text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">目前類別</h3>
+            <div class="space-y-4">
                 <div id="cat-group-1" class="flex flex-wrap gap-2"></div>
                 <div id="cat-group-2" class="flex flex-wrap gap-2 border-t pt-4"></div>
             </div>
         </div>
         
         <section id="page-form" class="page-node active space-y-8">
-            <div class="glass-card p-6 md:p-10">
+            <div class="glass-card p-6 md:p-10 border-t-8 border-[#2d5a27]">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">📗 閱讀共享紀錄撰寫</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-6">
@@ -69,22 +73,19 @@
                         <div><label class="block text-sm font-bold text-slate-600 mb-1">📝 詳細內容說明</label><textarea id="others" rows="3"></textarea></div>
                     </div>
                 </div>
-                <button id="save-btn" onclick="uploadData()" class="w-full bg-[#2d5a27] text-white font-bold py-4 rounded-2xl shadow-xl mt-8 text-lg">確認儲存並同步至雲端</button>
+                <button id="save-btn" onclick="uploadData()" class="w-full bg-[#2d5a27] text-white font-bold py-4 rounded-2xl shadow-xl mt-8 text-lg hover:scale-[1.02] active:scale-95 transition">確認儲存並同步至雲端</button>
             </div>
 
             <div class="glass-card p-6 md:p-10">
-                <h3 class="text-xl font-bold text-slate-700 mb-6 italic">📂 最近 5 筆紀錄 (<span class="current-cat-label text-green-700">公園</span>)</h3>
+                <h3 class="text-xl font-bold text-slate-700 mb-6 italic">📂 最新 5 筆紀錄 (<span class="current-cat-label text-green-700">公園</span>)</h3>
                 <div id="record-list" class="space-y-4"></div>
             </div>
         </section>
 
         <section id="page-query" class="page-node space-y-8">
             <div class="glass-card p-6 md:p-10">
-                <h2 class="text-3xl font-bold text-slate-800 mb-6 flex justify-between items-center">
-                    🔍 紀錄查詢 (<span class="current-cat-label text-[#2d5a27]">公園</span>)
-                </h2>
-                <div id="book-query-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    </div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">🔍 依書名查詢 (<span class="current-cat-label text-[#2d5a27]">公園</span>)</h2>
+                <div id="book-query-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </section>
 
@@ -92,13 +93,13 @@
             <div class="glass-card p-6 md:p-10 text-center">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-3xl font-bold text-slate-800">🌈 <span class="current-cat-label">公園</span> 文字雲</h2>
-                    <select id="queryMode" onchange="refreshUI()" class="bg-white border rounded-xl px-4 py-2 font-bold text-sm outline-none shadow-sm">
+                    <select id="queryMode" onchange="refreshUI()" class="bg-white border rounded-xl px-4 py-2 font-bold text-sm outline-none">
                         <option value="kw">筆記核心關鍵字</option>
                         <option value="discuss">討論關鍵字</option>
                         <option value="scaffold">鷹架關鍵字</option>
                     </select>
                 </div>
-                <div id="cloud-container" class="w-full h-[600px]"><canvas id="cloud-canvas"></canvas></div>
+                <div id="cloud-container" class="w-full h-[500px]"><canvas id="cloud-canvas"></canvas></div>
             </div>
         </section>
     </main>
@@ -121,7 +122,6 @@
             return s.startsWith("data:image") ? "" : s;
         }
 
-        // 初始化類別按鈕 (整合進單一函數，會被所有頁面共用)
         function init() {
             const b1 = document.getElementById('cat-group-1'), b2 = document.getElementById('cat-group-2');
             b1.innerHTML = ""; b2.innerHTML = "";
@@ -133,12 +133,8 @@
                     currentCat = cat;
                     document.querySelectorAll('.cat-tag').forEach(tag => tag.classList.remove('active'));
                     e.target.classList.add('active');
-                    // 更新所有頁面上的類別文字標籤
                     document.querySelectorAll('.current-cat-label').forEach(el => el.innerText = cat);
-                    // 根據目前所在頁面刷新內容
-                    renderList();
-                    renderQueryList();
-                    refreshUI();
+                    renderList(); renderQueryList(); refreshUI();
                 };
                 (group1.includes(cat) ? b1 : b2).appendChild(b);
             });
@@ -146,18 +142,21 @@
         }
 
         async function fetchData() {
-            try { const res = await fetch(API_URL); db = await res.json(); renderList(); renderQueryList(); refreshUI(); } catch(e) {}
+            try { 
+                const res = await fetch(API_URL); 
+                db = await res.json(); 
+                renderList(); renderQueryList(); refreshUI(); 
+            } catch(e) { console.error("抓取失敗"); }
         }
 
         function switchPage(page) {
             document.querySelectorAll('.page-node').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
             if(page === 'cloud') setTimeout(refreshUI, 300);
-            if(page === 'query') renderQueryList();
             window.scrollTo(0,0);
         }
 
-        // 填寫頁：最新 5 筆
+        // 優化點：首頁列表只顯示純文字，大幅減少圖片渲染負擔
         function renderList() {
             const list = document.getElementById('record-list');
             const filtered = db.filter(r => String(r[0]).trim() === currentCat);
@@ -165,31 +164,23 @@
             [...filtered].reverse().slice(0, 5).forEach(r => {
                 const item = document.createElement('div');
                 item.className = "bg-white p-5 rounded-2xl border flex justify-between items-center cursor-pointer hover:border-green-300 transition shadow-sm";
-                const photo = r.find(cell => String(cell).startsWith("data:image"));
                 item.innerHTML = `
                     <div class="text-left flex-grow">
                         <h4 class="font-bold text-[#2d5a27] text-lg">📖 ${clean(r[1]) || '未命名'}</h4>
-                        <p class="text-xs text-slate-400 line-clamp-1">${clean(r[8]) || '無詳細說明'}</p>
+                        <p class="text-xs text-slate-400 line-clamp-1 mt-1">${clean(r[8]) || '點擊查看詳情...'}</p>
                     </div>
-                    ${photo ? `<img src="${photo}" class="w-12 h-12 object-cover rounded-xl border ml-4">` : ''}
+                    <div class="text-[#2d5a27] opacity-30">❯</div>
                 `;
-                item.onclick = () => {
-                    const body = document.getElementById('m-body');
-                    body.innerHTML = recordTemplate(r);
-                    document.getElementById('modal').style.display = 'flex';
-                };
+                item.onclick = () => showDetails(r);
                 list.appendChild(item);
             });
         }
 
-        // 查詢頁：依書名合併
         function renderQueryList() {
             const container = document.getElementById('book-query-list');
             const filtered = db.filter(r => String(r[0]).trim() === currentCat);
             const bookNames = [...new Set(filtered.map(r => clean(r[1])))].filter(name => name !== "");
-            
             container.innerHTML = bookNames.length ? "" : "<div class='col-span-full text-center py-10 text-slate-400'>目前此類別無紀錄</div>";
-
             bookNames.forEach(name => {
                 const btn = document.createElement('div');
                 btn.className = "bg-white p-4 rounded-2xl border-2 border-slate-100 hover:border-[#2d5a27] hover:bg-green-50 transition cursor-pointer font-bold text-[#2d5a27] text-center shadow-sm";
@@ -197,7 +188,7 @@
                 btn.onclick = () => {
                     const matched = db.filter(r => clean(r[1]) === name && String(r[0]).trim() === currentCat);
                     const body = document.getElementById('m-body');
-                    body.innerHTML = `<h2 class="text-3xl font-black text-[#2d5a27] border-b-2 pb-2 mb-4">📚 書名：${name}</h2>`;
+                    body.innerHTML = `<h2 class="text-3xl font-black text-[#2d5a27] border-b-2 pb-2 mb-4">📚 ${name}</h2>`;
                     matched.reverse().forEach(r => body.innerHTML += recordTemplate(r));
                     document.getElementById('modal').style.display = 'flex';
                 };
@@ -205,37 +196,33 @@
             });
         }
 
-        // 文字雲：點擊看多筆
         function refreshUI() {
             const mode = document.getElementById('queryMode').value;
             const filtered = db.filter(r => String(r[0]).trim() === currentCat);
             const freq = {};
             let col = mode === "kw" ? 2 : (mode === "discuss" ? 6 : 7);
-            
             filtered.forEach(r => {
                 const content = clean(r[col]);
-                if(content) {
-                    content.split(/[\s,，、]+/).filter(w => w.length > 0).forEach(w => freq[w] = (freq[w] || 0) + 1);
-                }
+                if(content) content.split(/[\s,，、]+/).filter(w => w.length > 0).forEach(w => freq[w] = (freq[w] || 0) + 1);
             });
-
             const cvs = document.getElementById('cloud-canvas'), cnt = document.getElementById('cloud-container');
             if(!cvs) return;
-            cvs.width = cnt.offsetWidth; cvs.height = 600;
+            cvs.width = cnt.offsetWidth; cvs.height = 500;
             WordCloud(cvs, {
                 list: Object.entries(freq).map(([w, c]) => [w, Math.min(c * 15 + 30, 100)]),
                 click: (item) => {
                     const word = item[0];
                     const matched = db.filter(r => String(r[0]).trim() === currentCat && String(r[col]).includes(word));
                     const body = document.getElementById('m-body');
-                    body.innerHTML = `<h2 class="text-3xl font-black text-[#2d5a27] border-b-2 pb-2 mb-4">🔍 關鍵字：${word}</h2>`;
-                    matched.forEach(r => body.innerHTML += recordTemplate(r));
+                    body.innerHTML = `<h2 class="text-3xl font-black text-[#2d5a27] border-b-2 pb-2 mb-4">🔍 ${word}</h2>`;
+                    matched.reverse().forEach(r => body.innerHTML += recordTemplate(r));
                     document.getElementById('modal').style.display = 'flex';
                 },
                 fontFamily: 'Noto Sans TC', color: '#2d5a27', rotateRatio: 0, backgroundColor: '#ffffff'
             });
         }
 
+        // 優化核心：彈窗開啟時才搜尋 Base64 照片並顯示，避開初始載入壓力
         function recordTemplate(r) {
             const photo = r.find(cell => String(cell).startsWith("data:image"));
             return `
@@ -250,18 +237,26 @@
                 </div>`;
         }
 
+        function showDetails(r) {
+            const body = document.getElementById('m-body');
+            body.innerHTML = recordTemplate(r);
+            document.getElementById('modal').style.display = 'flex';
+        }
+
         async function uploadData() {
             const btn = document.getElementById('save-btn'), file = document.getElementById('photo').files[0];
             const data = {
                 cat: currentCat, title: document.getElementById('title').value, kw: document.getElementById('kw').value,
                 child: document.getElementById('child').value, feel: document.getElementById('feel').value,
-                useType: Array.from(document.querySelectorAll('input[name="useType"]:checked')).map(el => el.value).join(", "),
                 discuss: document.getElementById('discuss').value, scaffold: document.getElementById('scaffold').value,
                 others: document.getElementById('others').value, img: file ? await toBase64(file) : ""
             };
-            if(!data.title || !data.kw) return alert("請填寫書名與關鍵字");
+            if(!data.title || !data.kw) return alert("請填寫必填欄位");
             btn.disabled = true; btn.innerText = "儲存中...";
-            try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); alert("✅ 儲存成功！"); location.reload(); } catch(e) { btn.disabled = false; }
+            try { 
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); 
+                alert("✅ 儲存成功！"); location.reload(); 
+            } catch(e) { btn.disabled = false; }
         }
 
         const toBase64 = f => new Promise(res => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => res(rd.result); });
