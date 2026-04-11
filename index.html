@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀共享紀錄系統 - 南港幼兒園共用版</title>
+    <title>閱讀共享紀錄系統 - 南港幼教專業版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <style>
@@ -20,13 +20,7 @@
         #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 100%; max-w: 3xl; border-radius: 2.5rem; padding: 2rem; position: relative; margin: 2rem auto; }
         textarea, input[type="text"] { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 12px; width: 100%; outline: none; background-color: #fcfcfc; transition: border-color 0.2s; }
-        textarea:focus, input[type="text"]:focus { border-color: #2d5a27; }
-        .mini-tag { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; margin: 2px; }
-        .tag-kw { background: #f0fdf4; color: #166534; border-color: #bbf7d0; } 
-        .tag-info { background: #fff7ed; color: #9a3412; border-color: #ffedd5; } 
-        .tag-guide { background: #f0f9ff; color: #075985; border-color: #e0f2fe; }
-        .full-text-display { white-space: pre-wrap; word-break: break-all; line-height: 1.8; color: #1e293b; font-size: 1.05rem; }
-        .required-star { color: #ef4444; margin-left: 2px; }
+        .ai-btn { background: linear-gradient(135deg, #2d5a27 0%, #4a7c44 100%); color: white; padding: 6px 16px; border-radius: 999px; font-size: 14px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -48,14 +42,18 @@
         
         <section id="page-form" class="page-node active space-y-8">
             <div class="glass-card p-6 md:p-10 border-t-8 border-[#2d5a27]">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">📗 撰寫紀錄</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">📗 撰寫紀錄</h2>
+                    <div onclick="generateAIHelp()" class="ai-btn">✨ AI 靈感助手 (專業生成)</div>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
                     <div class="space-y-6">
-                        <div><label class="block font-bold mb-1">繪本名稱<span class="required-star">*</span></label><input type="text" id="title" style="background-color: #fffbeb;" placeholder="請輸入書名"></div>
-                        <div><label class="block font-bold mb-1 text-green-800">📌 核心關鍵字<span class="required-star">*</span></label><input type="text" id="kw" style="background-color: #f0fdf4;" placeholder="以空白鍵區隔"></div>
+                        <div><label class="block font-bold mb-1">繪本名稱<span class="required-star">*</span></label><input type="text" id="title" style="background-color: #fffbeb;" placeholder="請輸入繪本名稱"></div>
+                        <div><label class="block font-bold mb-1 text-green-800">📌 核心關鍵字<span class="required-star">*</span></label><input type="text" id="kw" style="background-color: #f0fdf4;" placeholder="AI將根據類別自動填入"></div>
                         <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200">
-                            <label class="block font-bold mb-2">📸 上傳照片</label>
-                            <input type="file" id="photo" accept="image/*" class="w-full text-xs">
+                            <label class="block font-bold mb-2">📸 上傳共讀照片</label>
+                            <input type="file" id="photo" accept="image/*" capture="environment" class="w-full text-xs">
                         </div>
                         <div>
                             <label class="block font-bold mb-2">使用方式</label>
@@ -70,11 +68,20 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 gap-4">
                             <div><label class="block font-bold text-amber-700">📙 出版資訊<span class="required-star">*</span></label><input type="text" id="publish" placeholder="作者、出版社"></div>
-                            <div><label class="block font-bold text-sky-700">🏗️ 提問引導<span class="required-star">*</span></label><input type="text" id="guide" placeholder="引導思考問題"></div>
+                            <div>
+                                <label class="block font-bold text-sky-700">🏗️ 提問引導 (對幼兒問法)<span class="required-star">*</span></label>
+                                <textarea id="guide" rows="8" placeholder="點擊 AI 助手生成提問..."></textarea>
+                            </div>
                         </div>
-                        <div><label class="block font-bold text-slate-500">🧒 孩子的話</label><textarea id="child" rows="2"></textarea></div>
-                        <div><label class="block font-bold text-slate-500">✍️ 我的心得</label><textarea id="feel" rows="2"></textarea></div>
-                        <div><label class="block font-bold text-slate-500">📝 詳細內容</label><textarea id="others" rows="3"></textarea></div>
+                        <div><label class="block font-bold text-slate-500">✍️ 我的心得 (大人專業書寫)</label><textarea id="feel" rows="2"></textarea></div>
+                        <div>
+                            <label class="block font-bold text-slate-500">📝 詳細內容/書籍介紹</label>
+                            <div class="flex gap-2 mb-2">
+                                <button onclick="searchExternal('books')" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">博客來</button>
+                                <button onclick="searchExternal('google')" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">搜尋導讀</button>
+                            </div>
+                            <textarea id="others" rows="3"></textarea>
+                        </div>
                     </div>
                 </div>
                 <button id="save-btn" onclick="uploadData()" class="w-full bg-[#2d5a27] text-white font-bold py-4 rounded-2xl shadow-xl mt-8 text-lg hover:bg-[#1e3d1a] transition">確認儲存並同步</button>
@@ -97,14 +104,7 @@
 
         <section id="page-cloud" class="page-node space-y-8">
             <div class="glass-card p-6 md:p-10 text-center">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <h2 class="text-3xl font-bold text-slate-800">🌈 文字雲成果</h2>
-                    <select id="queryMode" onchange="refreshUI()" class="bg-white border-2 border-green-100 p-2 rounded-xl text-sm outline-none">
-                        <option value="kw">核心關鍵字</option>
-                        <option value="publish">出版資訊</option>
-                        <option value="guide">提問引導</option>
-                    </select>
-                </div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-8">🌈 文字雲成果</h2>
                 <div id="cloud-container" class="w-full h-[500px]"><canvas id="cloud-canvas"></canvas></div>
             </div>
         </section>
@@ -118,20 +118,64 @@
     </div>
 
     <script>
+        // 🔴 請確保這串網址與你 GAS 部署後的網址完全相同
         const API_URL = "https://script.google.com/macros/s/AKfycby25k6qhqcMzyFKLaKL6zBx_ks3sBUH4jLXGGFTk4QLWLWcO8B-JcuVtnVZICivUXrF/exec";
         
-        // 🔴 第一組：社區類別（已加入交通工具）
         const g1 = ["公園", "大樹花草", "鳥類", "好朋友", "建築與設施", "爺爺奶奶", "交通工具"];
-        // 🔴 第二組：其他類別
         const g2 = ["SEL", "SDGs", "名人傳記", "生活自理", "性別平等", "其他"]; 
-        
         window.selectedCats = ["公園"]; 
         let db = [];
 
-        function clean(str) { 
-            const s = String(str || "").trim();
-            return (s.startsWith("data:image") || s.length > 5000) ? "" : s;
+        async function generateAIHelp() {
+            const title = document.getElementById('title').value;
+            const btn = document.querySelector('.ai-btn');
+            if(!title) return alert("請先輸入繪本名稱！");
+
+            btn.innerText = "✨ AI 正在努力分析中...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "ai_generate", title: title })
+                });
+                const result = await response.json();
+                
+                // 強效解析 JSON
+                let aiData;
+                try {
+                    aiData = JSON.parse(result.text);
+                } catch (e) {
+                    const cleaned = result.text.replace(/```json/gi, "").replace(/```/gi, "").trim();
+                    aiData = JSON.parse(cleaned);
+                }
+                
+                document.getElementById('guide').value = aiData.guide;
+                document.getElementById('feel').value = aiData.feel;
+                
+                const catMap = { "公園": "自然探索", "交通工具": "工程運輸", "SEL": "情緒教育", "大樹花草": "植物觀察" };
+                let kws = "";
+                window.selectedCats.forEach(cat => { if(catMap[cat]) kws += catMap[cat] + " "; });
+                document.getElementById('kw').value = kws.trim() || "幼教 繪本";
+
+            } catch (e) {
+                alert("AI 生成失敗，請確認 GAS 是否部署為新版本，或再試一次。");
+            } finally {
+                btn.innerText = "✨ AI 靈感助手 (專業生成)";
+                btn.disabled = false;
+            }
         }
+
+        function searchExternal(type) {
+            const title = document.getElementById('title').value;
+            if(!title) return alert("請先輸入書名");
+            let url = (type === 'books') 
+                ? `https://search.books.com.tw/search/query/key/${encodeURIComponent(title)}`
+                : `https://www.google.com/search?q=${encodeURIComponent(title + " 繪本 導讀 備課")}`;
+            window.open(url, '_blank');
+        }
+
+        function clean(str) { return String(str || "").trim(); }
 
         function init() {
             const b1 = document.getElementById('cat-group-1'), b2 = document.getElementById('cat-group-2');
@@ -140,17 +184,11 @@
                 const b = document.createElement('div');
                 b.className = `cat-tag ${window.selectedCats.includes(cat) ? 'active' : ''}`;
                 b.innerText = cat;
-                b.onclick = (e) => {
+                b.onclick = () => {
                     if (window.selectedCats.includes(cat)) {
-                        if (window.selectedCats.length > 1) {
-                            window.selectedCats = window.selectedCats.filter(c => c !== cat);
-                            e.target.classList.remove('active');
-                        }
-                    } else {
-                        window.selectedCats.push(cat);
-                        e.target.classList.add('active');
-                    }
-                    renderList(); renderQueryList(); refreshUI();
+                        if (window.selectedCats.length > 1) window.selectedCats = window.selectedCats.filter(c => c !== cat);
+                    } else window.selectedCats.push(cat);
+                    init(); renderList(); renderQueryList(); refreshUI();
                 };
                 (g1.includes(cat) ? b1 : b2).appendChild(b);
             });
@@ -158,12 +196,10 @@
         }
 
         async function fetchData() {
-            try { const res = await fetch(API_URL); db = await res.json(); renderList(); renderQueryList(); refreshUI(); } catch(e) { console.error("資料讀取錯誤:", e); }
+            try { const res = await fetch(API_URL); db = await res.json(); renderList(); renderQueryList(); refreshUI(); } catch(e) {}
         }
 
-        function getFilteredDB() {
-            return db.filter(r => window.selectedCats.some(sel => String(r[0]).includes(sel)));
-        }
+        function getFilteredDB() { return db.filter(r => window.selectedCats.some(sel => String(r[0]).includes(sel))); }
 
         function switchPage(page) {
             document.querySelectorAll('.page-node').forEach(p => p.classList.remove('active'));
@@ -174,56 +210,19 @@
 
         function recordTemplate(r) {
             const photo = r[9] || "";
-            let displayImg = "";
-            if (photo && !photo.includes("上傳失敗")) {
-                const id = photo.includes('id=') ? photo.split('id=')[1] : photo;
-                displayImg = `https://drive.google.com/thumbnail?id=${id}&sz=s1000`;
-            }
-            return `
-                <div class="record-entry py-6 border-b last:border-none">
-                    <div class="mb-4">
-                        <div class="text-xs font-bold text-slate-400 mb-1 uppercase">類別：${clean(r[0])}</div>
-                        <h4 class="font-bold text-3xl text-[#2d5a27] mb-3">📖 ${clean(r[1])}</h4>
-                        <div class="flex flex-wrap gap-1">
-                            ${getTagsHTML(r[2], 'tag-kw')} ${getTagsHTML(r[6], 'tag-info')} ${getTagsHTML(r[7], 'tag-guide')}
-                        </div>
-                    </div>
-                    <div class="space-y-5 mt-6">
-                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 text-sm">
-                            <b class="text-orange-800">📚 出版資訊：</b>${clean(r[6])}
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div class="bg-amber-50 p-5 rounded-2xl border border-amber-100">
-                                <b class="text-amber-800 block mb-2 font-bold">🧒 孩子的話：</b><div class="full-text-display">${clean(r[3]) || '無'}</div>
-                            </div>
-                            <div class="bg-sky-50 p-5 rounded-2xl border border-sky-100">
-                                <b class="text-sky-800 block mb-2 font-bold">✍️ 我的心得：</b><div class="full-text-display">${clean(r[4]) || '無'}</div>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm">
-                            <b class="text-blue-800">🏗️ 提問引導：</b>${clean(r[7])}
-                        </div>
-                        <div class="bg-green-50 p-6 rounded-2xl border border-green-100">
-                            <b class="text-green-800 block mb-2 font-bold">📝 詳細內容：</b><div class="full-text-display">${clean(r[8])}</div>
-                        </div>
-                        ${displayImg ? `<div class="text-center mt-6"><img src="${displayImg}" class="inline-block max-w-full rounded-3xl shadow-xl border-4 border-white"></div>` : ''}
-                    </div>
-                </div>`;
-        }
-
-        function getTagsHTML(val, className) {
-            if(!val) return "";
-            return String(val).split(/[\s,，、/]+/).filter(t => t.length > 0).map(t => `<span class="mini-tag ${className}">#${t}</span>`).join('');
+            let img = (photo && !photo.includes("上傳失敗")) 
+                ? `<div class="text-center mt-6"><img src="https://drive.google.com/thumbnail?id=${photo.split('id=')[1]}&sz=s1000" class="inline-block max-w-full rounded-3xl shadow-xl"></div>` : "";
+            return `<div class="record-entry py-6"><h4 class="font-bold text-3xl text-[#2d5a27] mb-3">📖 ${clean(r[1])}</h4><div class="space-y-4 text-sm"><div class="bg-blue-50 p-5 rounded-2xl border"><b>🏗️ 提問引導：</b>${clean(r[7])}</div><div class="bg-sky-50 p-5 rounded-2xl border"><b>✍️ 我的心得：</b>${clean(r[4])}</div>${img}</div></div>`;
         }
 
         function renderList() {
             const list = document.getElementById('record-list');
             const filtered = getFilteredDB();
-            list.innerHTML = filtered.length ? "" : "此類別尚無紀錄";
+            list.innerHTML = "";
             [...filtered].reverse().slice(0, 5).forEach(r => {
                 const item = document.createElement('div');
-                item.className = "bg-white p-5 rounded-2xl border flex justify-between items-center cursor-pointer shadow-sm hover:bg-green-50 mb-2 transition";
-                item.innerHTML = `<h4 class="font-bold text-[#2d5a27]">📖 ${clean(r[1])}</h4><span class="text-slate-300">❯</span>`;
+                item.className = "bg-white p-5 rounded-2xl border mb-2 cursor-pointer hover:bg-green-50";
+                item.innerHTML = `<h4 class="font-bold text-[#2d5a27]">📖 ${clean(r[1])}</h4>`;
                 item.onclick = () => { document.getElementById('m-body').innerHTML = recordTemplate(r); document.getElementById('modal').style.display = 'block'; };
                 list.appendChild(item);
             });
@@ -232,11 +231,11 @@
         function renderQueryList() {
             const container = document.getElementById('book-query-list');
             const term = document.getElementById('querySearch').value.toLowerCase();
-            const filtered = getFilteredDB().filter(r => String(r[1]).toLowerCase().includes(term) || String(r[6]).toLowerCase().includes(term));
-            container.innerHTML = filtered.length ? "" : "<div class='col-span-full text-center py-10 text-slate-400'>找不到相關書籍</div>";
+            const filtered = getFilteredDB().filter(r => String(r[1]).toLowerCase().includes(term));
+            container.innerHTML = "";
             [...new Set(filtered.map(r => clean(r[1])))].forEach(name => {
                 const btn = document.createElement('div');
-                btn.className = "bg-white p-4 rounded-2xl border-2 border-slate-100 hover:border-[#2d5a27] cursor-pointer font-bold text-[#2d5a27] text-center shadow-sm";
+                btn.className = "bg-white p-4 rounded-2xl border font-bold text-center cursor-pointer";
                 btn.innerText = "📖 " + name;
                 btn.onclick = () => {
                     const matched = db.filter(r => clean(r[1]) === name);
@@ -248,28 +247,13 @@
         }
 
         function refreshUI() {
-            const mode = document.getElementById('queryMode').value;
             const filtered = getFilteredDB();
             const freq = {};
-            let col = mode === "kw" ? 2 : (mode === "publish" ? 6 : 7);
-            filtered.forEach(r => {
-                const content = clean(r[col]);
-                if(content) content.split(/[\s,，、/]+/).forEach(w => { 
-                    if(w.length > 1 && !["作者", "出版社"].includes(w)) freq[w] = (freq[w] || 0) + 1; 
-                });
-            });
+            filtered.forEach(r => { if(r[2]) clean(r[2]).split(/[\s,，、/]+/).forEach(w => { if(w.length > 1) freq[w] = (freq[w] || 0) + 1; }); });
             const cvs = document.getElementById('cloud-canvas'), cnt = document.getElementById('cloud-container');
             if(!cvs) return;
             cvs.width = cnt.offsetWidth; cvs.height = 500;
-            WordCloud(cvs, {
-                list: Object.entries(freq).map(([w, c]) => [w, Math.min(c * 15 + 25, 100)]),
-                click: (item) => {
-                    const matched = filtered.filter(r => String(r[col]).includes(item[0]));
-                    document.getElementById('m-body').innerHTML = `<h2 class="text-2xl font-bold mb-6 text-center text-[#2d5a27]">搜尋結果：${item[0]}</h2>` + matched.reverse().map(r => recordTemplate(r)).join('');
-                    document.getElementById('modal').style.display = 'block';
-                },
-                fontFamily: 'Noto Sans TC', color: 'random-dark', rotateRatio: 0, backgroundColor: '#ffffff'
-            });
+            WordCloud(cvs, { list: Object.entries(freq).map(([w, c]) => [w, Math.min(c * 15 + 25, 100)]), fontFamily: 'Noto Sans TC', color: 'random-dark', rotateRatio: 0 });
         }
 
         const toBase64 = f => new Promise(res => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => res(rd.result); });
@@ -277,28 +261,19 @@
         async function uploadData() {
             const btn = document.getElementById('save-btn');
             const file = document.getElementById('photo').files[0];
-            const v_title = document.getElementById('title').value.trim();
-            const v_kw = document.getElementById('kw').value.trim();
-            const p_input = document.getElementById('publish').value.trim();
-            const g_input = document.getElementById('guide').value.trim();
-
-            if(!v_title || !v_kw || !p_input || !g_input) return alert("請填寫必填項目");
-
+            if(!document.getElementById('title').value) return alert("書名是必填唷！");
             btn.disabled = true; btn.innerText = "儲存中...";
             let imgData = file ? await toBase64(file) : "";
-
             const sendData = {
-                cat: window.selectedCats.join(", "), 
-                title: v_title, kw: v_kw, publish: p_input, guide: g_input,
-                child: document.getElementById('child').value,
-                feel: document.getElementById('feel').value,
+                cat: window.selectedCats.join(", "), title: document.getElementById('title').value,
+                kw: document.getElementById('kw').value, child: document.getElementById('child').value,
+                feel: document.getElementById('feel').value, publish: document.getElementById('publish').value,
+                guide: document.getElementById('guide').value, others: document.getElementById('others').value,
                 useType: Array.from(document.querySelectorAll('input[name="useType"]:checked')).map(el => el.value).join(", "),
-                others: document.getElementById('others').value,
                 img: imgData
             };
-
             try { 
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(sendData) }); 
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(sendData) }); 
                 alert("✅ 儲存成功！"); location.reload(); 
             } catch(e) { alert("儲存失敗"); btn.disabled = false; }
         }
